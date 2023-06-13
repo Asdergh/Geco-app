@@ -91,6 +91,7 @@ class Geco_layout(BoxLayout, Data_An):
         self.button_2 = Button(text="get a graph")
         self.add_widget(self.button_1)
         self.button_1.bind(on_press=self.add_data)
+        
     def add_data(self, value):
         self.add_element(body_lenght=self.body_lenght, tail_lenght=self.tail_lenght, 
                          weight=self.weight, number=self.geco_number, cls_age=self.age)
