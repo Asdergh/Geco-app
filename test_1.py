@@ -9,6 +9,7 @@ from kivy.uix.button import Button
 from kivy.uix.label import Label
 
 
+
 class Data_Analyse():
 
     def __init__(self) -> None:
@@ -20,42 +21,36 @@ class Data_Analyse():
         self.figure = plt.figure()
         self.surface = self.figure.add_subplot()
 
-        self.body_lenght = []
-        self.tail_lenght = []
-        self.weight = []
-        self.age_label = []
-        self.number = []
+        
 
 
 
     def load_data(self, body_lenght, tail_lenght, weight, age_label, number=0):
-        self.body_lenght = []
-        self.tail_lenght = []
-        self.weight = []
-        self.age_label = []
-        self.number = []
-        self.body_lenght.append(body_lenght)
-        self.tail_lenght.append(tail_lenght)
-        self.weight.append(weight)
-        self.age_label.append(age_label)
+        
         self.GecoBase.loc[f"geco_number{number}"] = np.array([body_lenght, tail_lenght, weight, age_label])
         print(self.GecoBase)
 
     
     def load_to_file(self, value):
-
+        
         try:
             with open(self.file_name, "r") as file:
                 self.FileData = pd.read_json(file)
-                self.FileData = js.loads(self.FileData)
-                self.json_data = self.GecoBase.to_json()
+                #self.FileData = js.loads(self.FileData.to_json())
+                self.json_data = self.GecoBase.to_numpy()
+                general_data = np.vstack((self.json_data, self.FileData.to_numpy()))
+                print(general_data)
+                self.json_data = pd.DataFrame(general_data)
+                self.json_data = self.json_data.to_json()
                 self.json_data = js.loads(self.json_data)
-                self.json_data.update(self.FileData)
+
+
             
             with open(self.file_name, "w") as file:
                 js.dump(self.json_data, file)
 
         except BaseException:
+            print("error")
             with open(self.file_name, "w") as file:
                 print(self.GecoBase)
                 self.json_data = self.GecoBase.to_json()
@@ -64,10 +59,16 @@ class Data_Analyse():
             
 
             
-    def graphs(self, graph_type):
-         
-        self.weight = np.asarray(self.FileData.iloc[:, 2])
-        self.labels = np.asarray(self.FileData.iloc[:, 3])
+    def graphs(self, value, graph_type="plot"):
+        
+        try:
+            self.weight = np.asarray(self.FileData.iloc[:, 2])
+            self.labels = np.asarray(self.FileData.iloc[:, 3])
+
+        except BaseException:
+            self.weight = np.asarray(self.GecoBase.iloc[:, 2])
+            self.labels = np.asarray(self.GecoBase.iloc[:, 3])
+
         self.colors = ["blue", "red", "green"]
         if graph_type == "plot":
             for (index, label) in enumerate(np.unique(self.labels)):
@@ -103,12 +104,16 @@ class Geco_layout(BoxLayout, Data_Analyse):
         self.add_widget(self.age)
         self.add_widget(Label(text="number"))
         self.data_base_button = Button(text="add data in database!!!")
-        self.grpah_button = Button(text="get a graph!!!")
+        self.graph_button = Button(text="get a graph!!!")
         self.file_button = Button(text="load all data to a file!!!")
         self.add_widget(self.data_base_button)
         self.add_widget(self.file_button)
+        self.add_widget(self.graph_button)
         self.data_base_button.bind(on_press=self.add_data)
         self.file_button.bind(on_press=self.load_to_file)
+        self.graph_button.bind(on_press=self.graphs)
+
+        
         
     def add_data(self, value):
         if type(self.body_lenght) == list:
