@@ -48,7 +48,7 @@ class Data_An():
                 flag == True
                 js.dump(self.json_data, file)
 
-    #show the data that we workiing with
+    #show the data wich we workiing with
     def visualise_data(self, graph_type=None):
         self.label = self.File_Array[:, 3]
         self.markers = ["v", "2", "^", "o", "v"]
@@ -90,7 +90,7 @@ class Geco_layout(BoxLayout, Data_An):
         self.button_1 = Button(text="add data in database!!!")
         self.button_2 = Button(text="get a graph")
         self.add_widget(self.button_1)
-        self.button_1.bind(on_press=self.add_data)
+        self.button_1.bind(on_release=self.add_data)
         
     def add_data(self, value):
         self.add_element(body_lenght=self.body_lenght, tail_lenght=self.tail_lenght, 
