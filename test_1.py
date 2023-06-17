@@ -9,12 +9,12 @@ from kivy.uix.button import Button
 from kivy.uix.label import Label
 
 
-
+plt.style.use("seaborn")
 class Data_Analyse():
 
     def __init__(self) -> None:
         
-        self.file_name = "GecoData.json"
+        self.file_name = "GecoData.text"
         self.GecoBase = pd.DataFrame({"BodyLenght": [], "TailLenght" : [], "Weight": [], "AgeLabel": []})
         self.json_data = self.GecoBase.to_json()
         self.json_data = js.loads(self.json_data)
@@ -33,51 +33,33 @@ class Data_Analyse():
     
     def load_to_file(self, value):
         
-        try:
-            with open(self.file_name, "r") as file:
-                self.FileData = pd.read_json(file)
-                #self.FileData = js.loads(self.FileData.to_json())
-                self.json_data = self.GecoBase.to_numpy()
-                general_data = np.vstack((self.json_data, self.FileData.to_numpy()))
-                print(general_data)
-                self.json_data = pd.DataFrame(general_data)
-                self.json_data = self.json_data.to_json()
-                self.json_data = js.loads(self.json_data)
+        with open(self.file_name, "a") as file:
+            self.data = self.GecoBase.to_numpy()
+            for item in self.data:
+                file.write(f"{item[0]}\t{item[1]}\t{item[2]}\t{item[3]}\n")
 
 
             
-            with open(self.file_name, "w") as file:
-                js.dump(self.json_data, file)
-
-        except BaseException:
-            print("error")
-            with open(self.file_name, "w") as file:
-                print(self.GecoBase)
-                self.json_data = self.GecoBase.to_json()
-                self.json_data = js.loads(self.json_data)
-                js.dump(self.json_data, file)
-            
-
-            
-    def graphs(self, value, graph_type="plot"):
+    def graphs(self, graph_type=True):
         
-        try:
-            self.weight = np.asarray(self.FileData.iloc[:, 2])
-            self.labels = np.asarray(self.FileData.iloc[:, 3])
-
-        except BaseException:
-            self.weight = np.asarray(self.GecoBase.iloc[:, 2])
-            self.labels = np.asarray(self.GecoBase.iloc[:, 3])
-
+        self.data = []
+        with open(self.file_name, "r") as file:
+            for string in file.readlines():
+                tmp_array = string.split("\t")
+                self.data.append([int(tmp_array[0]), int(tmp_array[1]), int(tmp_array[2]), int(tmp_array[3])])
+        self.data = np.asarray(self.data)
+        self.weight = self.data[:, 2]
+        self.labels = self.data[:, 3]
+        print(self.weight)
         self.colors = ["blue", "red", "green"]
-        if graph_type == "plot":
+        if graph_type:
             for (index, label) in enumerate(np.unique(self.labels)):
-                self.surface.plot(range(0, len(self.weight[self.labels==label])), self.weight[self.labels==label],
+                plt.plot(range(0, len(self.weight[self.labels==label])), self.weight[self.labels==label],
                                     color=self.colors[index], alpha=0.3, label=f"возврастная категория номер: [{label}]")
         
-        elif graph_type == "histo":
+        else:
             for (index, label) in enumerate(np.unique(self.labels)):
-                self.surface.hist(self.weight[self.labels==label], 20, color=self.colors[index], 
+                plt.hist(self.weight[self.labels==label], 20, color=self.colors[index], 
                                 label=f"возврастная категория номер: [{label}]", alpha=0.3)
         
         plt.legend(loc="upper left")
@@ -88,6 +70,7 @@ class Data_Analyse():
 class Geco_layout(BoxLayout, Data_Analyse):
     def __init__(self, **kwargs):
         self.geco_number = 0
+        self.flag = True
         self.orientation = "vertical"
         super(Geco_layout, self).__init__(**kwargs)
         self.add_widget(Label(text="geco body lenght"))
@@ -106,12 +89,15 @@ class Geco_layout(BoxLayout, Data_Analyse):
         self.data_base_button = Button(text="add data in database!!!")
         self.graph_button = Button(text="get a graph!!!")
         self.file_button = Button(text="load all data to a file!!!")
+        self.turn_button = Button(text="turn graph type [histo/curve]")
         self.add_widget(self.data_base_button)
         self.add_widget(self.file_button)
         self.add_widget(self.graph_button)
+        self.add_widget(self.turn_button)
         self.data_base_button.bind(on_press=self.add_data)
         self.file_button.bind(on_press=self.load_to_file)
-        self.graph_button.bind(on_press=self.graphs)
+        self.graph_button.bind(on_press=self.graph)
+        self.turn_button.bind(on_press=self.turn_graph_type)
 
         
         
@@ -124,6 +110,16 @@ class Geco_layout(BoxLayout, Data_Analyse):
                         weight=int(self.weight.text), age_label=int(self.age.text), number=self.geco_number)
         print(type(self.body_lenght))
         self.geco_number += 1
+    
+    def turn_graph_type(self, value):
+        if self.flag == True:
+            self.flag = False
+        else:
+            self.flag = True
+    
+    def graph(self, value):
+        self.graphs(graph_type=self.flag)
+
     
 class Geco_app(App):
      def build(self):
