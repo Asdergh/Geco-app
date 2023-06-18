@@ -3,10 +3,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json as js
 from kivy.app import App
+from kivymd.app import MDApp
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.uix.label import Label
+from kivymd.uix.datatables import MDDataTable
+from kivy.metrics import dp
 
 
 plt.style.use("seaborn")
@@ -20,6 +23,13 @@ class Data_Analyse():
         self.json_data = js.loads(self.json_data)
         self.figure = plt.figure()
         self.surface = self.figure.add_subplot()
+
+        self.data = []
+        with open(self.file_name, "r") as file:
+            for string in file.readlines():
+                tmp_array = string.split("\t")
+                self.data.append([int(tmp_array[0]), int(tmp_array[1]), int(tmp_array[2]), int(tmp_array[3])])
+        self.data = np.asarray(self.data)
 
         
 
@@ -42,12 +52,6 @@ class Data_Analyse():
             
     def graphs(self, graph_type=True):
         
-        self.data = []
-        with open(self.file_name, "r") as file:
-            for string in file.readlines():
-                tmp_array = string.split("\t")
-                self.data.append([int(tmp_array[0]), int(tmp_array[1]), int(tmp_array[2]), int(tmp_array[3])])
-        self.data = np.asarray(self.data)
         self.weight = self.data[:, 2]
         self.labels = self.data[:, 3]
         print(self.weight)
@@ -98,8 +102,11 @@ class Geco_layout(BoxLayout, Data_Analyse):
         self.file_button.bind(on_press=self.load_to_file)
         self.graph_button.bind(on_press=self.graph)
         self.turn_button.bind(on_press=self.turn_graph_type)
-
-        
+        self.Geco_data = MDDataTable(
+            column_data=[("Body_lenght", dp(30)), ("Tail_lenght", dp(30)), ("Weight", dp(30)), ("Age Label", dp(30))],
+            row_data = [(f"{item[0]}", f"{item[1]}", f"{item[2]}", f"{item[3]}") for (index, item) in enumerate(self.data)]
+        )
+        self.add_widget(self.Geco_data)        
         
     def add_data(self, value):
         if type(self.body_lenght) == list:
@@ -121,8 +128,11 @@ class Geco_layout(BoxLayout, Data_Analyse):
         self.graphs(graph_type=self.flag)
 
     
-class Geco_app(App):
-     def build(self):
+class Geco_app(MDApp):
+     
+    def build(self):
+        self.theme_cls.theme_style = "Dark"
+        self.theme_cls.primary_palette = "Orange"
         return Geco_layout()
      
 if __name__ == "__main__":
