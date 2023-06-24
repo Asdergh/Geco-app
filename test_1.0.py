@@ -13,47 +13,48 @@ from kivy.metrics import dp
 
 
 plt.style.use("seaborn")
-
-
 class Data_Analyse():
 
     def __init__(self) -> None:
-        self.file_name = "GecoData.csv"
-        try:
-            self.GecoBase = pd.read_csv(self.file_name)
-            #self.GecoBase = self.GecoBase.iloc[:, [1, 2, 3, 4]]
-        except BaseException:
-            self.GecoBase = pd.DataFrame({"Body_lenght": [], "Tail_lenght": [], "Weight": [], "Age_Label": []})
-            with open("GecoData.csv", "w") as file:
-                self.GecoBase.to_csv(self.file_name)
-
+        
+        self.file_name = "GecoData.text"
+        self.GecoBase = pd.DataFrame({"BodyLenght": [], "TailLenght" : [], "Weight": [], "AgeLabel": []})
+        self.json_data = self.GecoBase.to_json()
+        self.json_data = js.loads(self.json_data)
         self.figure = plt.figure()
         self.surface = self.figure.add_subplot()
 
+        self.data = []
+        with open(self.file_name, "r") as file:
+            for string in file.readlines():
+                tmp_array = string.split("\t")
+                self.data.append([int(tmp_array[0]), int(tmp_array[1]), int(tmp_array[2]), int(tmp_array[3])])
+        self.data = np.asarray(self.data)
+
         
 
-    def save_data(self, *argv): 
-        print(self.GecoBase)       
-        self.GecoBase.loc[f"{argv[4]}"] = [argv[0], argv[1], argv[2], argv[3]]
+
+
+    def load_data(self, body_lenght, tail_lenght, weight, age_label, number=0):
+        
+        self.GecoBase.loc[f"geco_number{number}"] = np.array([body_lenght, tail_lenght, weight, age_label])
         print(self.GecoBase)
-    
-    def save_to_file(self, value):
-        
-        # TODO: to_csv
-        #with open(self.file_name, "a") as file:
-        #    self.data = self.GecoBase.to_numpy()
-        #    for item in self.data:
-        #        file.write(f"{item[0]}\t{item[1]}\t{item[2]}\t{item[3]}\n")
-        self.GecoBase.to_csv(self.file_name)
 
+    
+    def load_to_file(self, value):
+        
+        with open(self.file_name, "a") as file:
+            self.data = self.GecoBase.to_numpy()
+            for item in self.data:
+                file.write(f"{item[0]}\t{item[1]}\t{item[2]}\t{item[3]}\n")
 
 
             
     def graphs(self, graph_type=True):
         
-        self.weight = self.GecoBase.iloc[:, 2].to_numpy()
-        self.labels = self.GecoBase.iloc[:, 3].to_numpy()
-        print(self.weight, self.labels)
+        self.weight = self.data[:, 2]
+        self.labels = self.data[:, 3]
+        print(self.labels)
         self.colors = ["blue", "red", "green"]
         if graph_type:
             for (index, label) in enumerate(np.unique(self.labels)):
@@ -72,10 +73,10 @@ class Data_Analyse():
 
 class Geco_layout(BoxLayout, Data_Analyse):
     def __init__(self, **kwargs):
+        self.geco_number = 0
         self.flag = True
         self.orientation = "vertical"
         super(Geco_layout, self).__init__(**kwargs)
-        self.geco_number = self.GecoBase.to_numpy().shape[0]
         self.add_widget(Label(text="geco body lenght"))
         self.body_lenght = TextInput()
         self.add_widget(self.body_lenght)
@@ -98,19 +99,22 @@ class Geco_layout(BoxLayout, Data_Analyse):
         self.add_widget(self.graph_button)
         self.add_widget(self.turn_button)
         self.data_base_button.bind(on_press=self.add_data)
-        self.file_button.bind(on_press=self.save_to_file)
+        self.file_button.bind(on_press=self.load_to_file)
         self.graph_button.bind(on_press=self.graph)
         self.turn_button.bind(on_press=self.turn_graph_type)
-        #self.add_widget(self.Geco_data)        
-
-    # TODO: исправить! Использовать self.
+        self.Geco_data = MDDataTable(
+            column_data=[("Body_lenght", dp(30)), ("Tail_lenght", dp(30)), ("Weight", dp(30)), ("Age Label", dp(30))],
+            row_data = [(f"{item[0]}", f"{item[1]}", f"{item[2]}", f"{item[3]}") for (index, item) in enumerate(self.data)]
+        )
+        self.add_widget(self.Geco_data)        
+        
     def add_data(self, value):
-
-        self.save_data(int(self.body_lenght.text), int(self.tail_lenght.text), 
-                    int(self.weight.text), int(self.age.text), self.geco_number)
-        """except BaseException :
-            self.load_data(body_lenght=int(self.body_lenght[-1]), tail_lenght=int(self.tail_lenght[-1]),
-                                weight=int(self.weight[-1]), age_label=int(self.age_label[-1]), number=self.geco_number)"""
+        if type(self.body_lenght) == list:
+            self.load_data(body_lenght=int(self.body_lenght.text), tail_lenght=int(self.tail_lenght[-1]),
+                                weight=int(self.weight[-1]), age_label=int(self.age_label[-1]), number=self.geco_number)
+        else:       
+            self.load_data(body_lenght=int(self.body_lenght.text), tail_lenght=int(self.tail_lenght.text), 
+                        weight=int(self.weight.text), age_label=int(self.age.text), number=self.geco_number)
         print(type(self.body_lenght))
         self.geco_number += 1
     
@@ -133,3 +137,14 @@ class Geco_app(MDApp):
      
 if __name__ == "__main__":
     Geco_app().run()
+    
+
+
+                
+
+                   
+              
+         
+
+         
+          

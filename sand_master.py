@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import json as js
 from kivy.app import App
@@ -18,32 +20,27 @@ plt.style.use("seaborn")
 class Data_Analyse():
 
     def __init__(self) -> None:
-        self.file_name = "GecoData.csv"
+        
         try:
+            self.file_name = "GecoData.csv" # TODO: перейти на csv        
             self.GecoBase = pd.read_csv(self.file_name)
-            #self.GecoBase = self.GecoBase.iloc[:, [1, 2, 3, 4]]
+            self.GecoBase = self.GecoBase.iloc[:, [1, 2, 3, 4]]
+            #pd.read_csv(self.file_name)
         except BaseException:
-            self.GecoBase = pd.DataFrame({"Body_lenght": [], "Tail_lenght": [], "Weight": [], "Age_Label": []})
+            self.file_name = "GecoData.csv"
             with open("GecoData.csv", "w") as file:
-                self.GecoBase.to_csv(self.file_name)
-
+                pass
+            self.GecoBase = pd.DataFrame({"Body_lenght": [], "Tail_lenght": [], "Weight": [], "Age_Label": []})
         self.figure = plt.figure()
         self.surface = self.figure.add_subplot()
 
-        
 
-    def save_data(self, *argv): 
+    def load_data(self, *argv): 
         print(self.GecoBase)       
-        self.GecoBase.loc[f"{argv[4]}"] = [argv[0], argv[1], argv[2], argv[3]]
+        self.GecoBase.loc[f"{argv[4]}"] = np.array([argv[0], argv[1], argv[2], argv[3]])
         print(self.GecoBase)
     
-    def save_to_file(self, value):
-        
-        # TODO: to_csv
-        #with open(self.file_name, "a") as file:
-        #    self.data = self.GecoBase.to_numpy()
-        #    for item in self.data:
-        #        file.write(f"{item[0]}\t{item[1]}\t{item[2]}\t{item[3]}\n")
+    def load_to_file(self, value):
         self.GecoBase.to_csv(self.file_name)
 
 
@@ -98,15 +95,14 @@ class Geco_layout(BoxLayout, Data_Analyse):
         self.add_widget(self.graph_button)
         self.add_widget(self.turn_button)
         self.data_base_button.bind(on_press=self.add_data)
-        self.file_button.bind(on_press=self.save_to_file)
+        self.file_button.bind(on_press=self.load_to_file)
         self.graph_button.bind(on_press=self.graph)
-        self.turn_button.bind(on_press=self.turn_graph_type)
-        #self.add_widget(self.Geco_data)        
+        self.turn_button.bind(on_press=self.turn_graph_type)        
 
     # TODO: исправить! Использовать self.
     def add_data(self, value):
 
-        self.save_data(int(self.body_lenght.text), int(self.tail_lenght.text), 
+        self.load_data(int(self.body_lenght.text), int(self.tail_lenght.text), 
                     int(self.weight.text), int(self.age.text), self.geco_number)
         """except BaseException :
             self.load_data(body_lenght=int(self.body_lenght[-1]), tail_lenght=int(self.tail_lenght[-1]),
@@ -133,3 +129,6 @@ class Geco_app(MDApp):
      
 if __name__ == "__main__":
     Geco_app().run()
+
+DB = pd.read_csv("GecoData.csv")
+print(DB.iloc[:, [1, 2, 3, 4]])
