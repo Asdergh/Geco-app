@@ -13,14 +13,12 @@ from kivy.metrics import dp
 
 
 plt.style.use("seaborn")
-
-
 class Data_Analyse():
 
     def __init__(self) -> None:
         self.file_name = "GecoData.csv"
         try:
-            self.GecoBase = pd.read_csv(self.file_name)
+            self.GecoBase = pd.read_csv(self.file_name, index_col = 0)
             #self.GecoBase = self.GecoBase.iloc[:, [1, 2, 3, 4]]
         except BaseException:
             self.GecoBase = pd.DataFrame({"Body_lenght": [], "Tail_lenght": [], "Weight": [], "Age_Label": []})
@@ -108,9 +106,6 @@ class Geco_layout(BoxLayout, Data_Analyse):
 
         self.save_data(int(self.body_lenght.text), int(self.tail_lenght.text), 
                     int(self.weight.text), int(self.age.text), self.geco_number)
-        """except BaseException :
-            self.load_data(body_lenght=int(self.body_lenght[-1]), tail_lenght=int(self.tail_lenght[-1]),
-                                weight=int(self.weight[-1]), age_label=int(self.age_label[-1]), number=self.geco_number)"""
         print(type(self.body_lenght))
         self.geco_number += 1
     

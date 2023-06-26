@@ -1,3 +1,4 @@
+from typing import Any
 import pandas as pd
 import numpy as np
 import pandas as pd
@@ -11,7 +12,9 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivymd.uix.datatables import MDDataTable
+from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.metrics import dp
+from kivy.lang import Builder
 
 
 plt.style.use("seaborn")
@@ -25,7 +28,6 @@ class Data_Analyse():
             self.file_name = "GecoData.csv" # TODO: перейти на csv        
             self.GecoBase = pd.read_csv(self.file_name)
             self.GecoBase = self.GecoBase.iloc[:, [1, 2, 3, 4]]
-            #pd.read_csv(self.file_name)
         except BaseException:
             self.file_name = "GecoData.csv"
             with open("GecoData.csv", "w") as file:
@@ -43,9 +45,6 @@ class Data_Analyse():
     def load_to_file(self, value):
         self.GecoBase.to_csv(self.file_name)
 
-
-
-            
     def graphs(self, graph_type=True):
         
         self.weight = self.GecoBase.iloc[:, 2].to_numpy()
@@ -67,6 +66,10 @@ class Data_Analyse():
 
 
 
+
+
+
+
 class Geco_layout(BoxLayout, Data_Analyse):
     def __init__(self, **kwargs):
         self.flag = True
@@ -85,7 +88,7 @@ class Geco_layout(BoxLayout, Data_Analyse):
         self.add_widget(Label(text="age"))
         self.age = TextInput()
         self.add_widget(self.age)
-        self.add_widget(Label(text="number"))
+        #self.add_widget(Label(text="number"))
         self.data_base_button = Button(text="add data in database!!!")
         self.graph_button = Button(text="get a graph!!!")
         self.file_button = Button(text="load all data to a file!!!")
@@ -97,17 +100,15 @@ class Geco_layout(BoxLayout, Data_Analyse):
         self.data_base_button.bind(on_press=self.add_data)
         self.file_button.bind(on_press=self.load_to_file)
         self.graph_button.bind(on_press=self.graph)
-        self.turn_button.bind(on_press=self.turn_graph_type)        
+        self.turn_button.bind(on_press=self.turn_graph_type)
+        self.turn_screen = Button(text="go to the next screen")
+        self.add_widget(self.turn_screen)
+        self.turn_screen.bind(on_release=self.switch)
+               
 
-    # TODO: исправить! Использовать self.
     def add_data(self, value):
-
         self.load_data(int(self.body_lenght.text), int(self.tail_lenght.text), 
                     int(self.weight.text), int(self.age.text), self.geco_number)
-        """except BaseException :
-            self.load_data(body_lenght=int(self.body_lenght[-1]), tail_lenght=int(self.tail_lenght[-1]),
-                                weight=int(self.weight[-1]), age_label=int(self.age_label[-1]), number=self.geco_number)"""
-        print(type(self.body_lenght))
         self.geco_number += 1
     
     def turn_graph_type(self, value):
@@ -118,14 +119,51 @@ class Geco_layout(BoxLayout, Data_Analyse):
     
     def graph(self, value):
         self.graphs(graph_type=self.flag)
+    
+    def switch(self, value):
+        MainScreenManager().switch_to = DataTabletScreen()
+        
+
+
 
     
+class MainScreen(Screen):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        layout = Geco_layout()
+        self.add_widget(layout)
+
+class DataTabletScreen(Screen, Data_Analyse):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.box = BoxLayout()
+        self.turn_back = Button(text="turn to back screen")
+        self.Geco_data = MDDataTable(
+            column_data=[("Body_lenght", dp(30)), ("Tail_lenght", dp(30)), ("Weight", dp(30)), ("Age Label", dp(30))],
+            row_data = [(f"{item[0]}", f"{item[1]}", f"{item[2]}", f"{item[3]}") for (index, item) in enumerate(self.GecoBase.to_numpy())]
+        )
+        self.box.add_widget(self.turn_back)
+        self.box.add_widget(self.Geco_data)
+        self.add_widget(self.box)
+
+        self.turn_back.bind(on_release = self.switch)
+    
+    def switch(self, value):
+        MainScreenManager().switch_to = MainScreen()
+
+
+
+class MainScreenManager(ScreenManager):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.add_widget(MainScreen(name = "Screen_one"))
+        self.add_widget(DataTabletScreen(name = "Screen_two"))
+
 class Geco_app(MDApp):
-     
     def build(self):
         self.theme_cls.theme_style = "Dark"
         self.theme_cls.primary_palette = "Orange"
-        return Geco_layout()
+        return MainScreenManager()
      
 if __name__ == "__main__":
     Geco_app().run()
