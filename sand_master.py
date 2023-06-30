@@ -69,7 +69,7 @@ class Data_Analyse():
 
 
 
-
+# main screen layout propertys
 class Geco_layout(BoxLayout, Data_Analyse):
     def __init__(self, **kwargs):
         self.flag = True
@@ -105,21 +105,29 @@ class Geco_layout(BoxLayout, Data_Analyse):
         self.add_widget(self.turn_screen)
         self.turn_screen.bind(on_release=self.switch)
                
-
+# add save data button function
+# allowa you to save all data to
+# your dataframe
     def add_data(self, value):
         self.load_data(int(self.body_lenght.text), int(self.tail_lenght.text), 
                     int(self.weight.text), int(self.age.text), self.geco_number)
         self.geco_number += 1
-    
+
+# turn grapb type function
+# allows you to change the graph type
+# from plot to histo and back
     def turn_graph_type(self, value):
         if self.flag == True:
             self.flag = False
         else:
             self.flag = True
-    
+
+
     def graph(self, value):
         self.graphs(graph_type=self.flag)
-    
+
+# screen switch function
+# allows you to change curent screen
     def switch(self, value):
         MainScreenManager().switch_to = DataTabletScreen()
         
@@ -148,6 +156,7 @@ class DataTabletScreen(Screen, Data_Analyse):
 
         self.turn_back.bind(on_release = self.switch)
     
+
     def switch(self, value):
         MainScreenManager().switch_to = MainScreen()
 
@@ -168,5 +177,4 @@ class Geco_app(MDApp):
 if __name__ == "__main__":
     Geco_app().run()
 
-DB = pd.read_csv("GecoData.csv")
-print(DB.iloc[:, [1, 2, 3, 4]])
+
